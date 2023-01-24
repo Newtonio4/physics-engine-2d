@@ -5,10 +5,11 @@ using Flat;
 using Flat.Graphics;
 using System;
 using Flat.Input;
-using System.Diagnostics;
 using FlatPhysics;
 using System.Collections.Generic;
-using System.Reflection.Metadata;
+
+using FlatMath = FlatPhysics.FlatMath;
+using System.Reflection.Metadata.Ecma335;
 
 namespace TestingFlatPhysics
 {
@@ -21,6 +22,9 @@ namespace TestingFlatPhysics
         private Camera camera;
 
         private List<FlatBody> bodyList;
+        private Color[] colors;
+
+        private Vector2[] vertexBuffer = new Vector2[4];
 
         public Game1()
         {
@@ -34,20 +38,23 @@ namespace TestingFlatPhysics
             const double UpdatesPerSecond = 60d;
             this.TargetElapsedTime = TimeSpan.FromTicks((long)Math.Round((double)TimeSpan.TicksPerSecond / UpdatesPerSecond));
 
-            bodyList = new List<FlatBody>();
+            int bodyCount = 10;
+            bodyList = new List<FlatBody>(bodyCount);
+            colors = new Color[bodyCount];
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < bodyCount; i++)
             {
-                int type = new Random().Next(2);
-                float posX = new Random().Next(40) - 20;
-                float posY = new Random().Next(30) - 15;
+                //int type = new Random().Next(2);
+                int type = 1;
+                float posX = new Random().NextSingle() * 40 - 20;
+                float posY = new Random().NextSingle() * 30 - 15;
 
                 FlatBody body = null;
 
 
                 if (type == (int)ShapeType.Circle)
                 {
-                    if(!FlatBody.CreateCircleBody(3f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
+                    if(!FlatBody.CreateCircleBody(1f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
                     {
                         throw new Exception(errorMessaage);
                     }
@@ -55,13 +62,14 @@ namespace TestingFlatPhysics
                 }
                 else if (type == (int)ShapeType.Box)
                 {
-                    if (!FlatBody.CreateBoxBody(3f, 3f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
+                    if (!FlatBody.CreateBoxBody(2f, 2f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
                     {
                         throw new Exception(errorMessaage);
                     }
                 }
 
                 this.bodyList.Add(body);
+                this.colors[i] = RandomHelper.RandomColor();
             }
         }
 
@@ -73,7 +81,7 @@ namespace TestingFlatPhysics
             this.sprites = new Sprites(this);
             this.shapes = new Shapes(this);
             this.camera = new Camera(this.screen);
-            this.camera.Zoom = 5;
+            this.camera.Zoom = 20;
 
             base.Initialize();
         }
@@ -97,16 +105,52 @@ namespace TestingFlatPhysics
                     this.Exit();
                 }
 
-                if (keyboard.IsKeyClicked(Keys.A))
+                if (keyboard.IsKeyClicked(Keys.Q))
                 {
                     this.camera.IncZoom();
                 }
 
-                if (keyboard.IsKeyClicked(Keys.Z))
+                if (keyboard.IsKeyClicked(Keys.E))
                 {
                     this.camera.DecZoom();
                 }
+
+                float dx = 0f;
+                float dy = 0f;
+                float speed = 8f;
+
+                if (keyboard.IsKeyDown(Keys.W)) dy++;
+                if (keyboard.IsKeyDown(Keys.A)) dx--;
+                if (keyboard.IsKeyDown(Keys.S)) dy--;
+                if (keyboard.IsKeyDown(Keys.D)) dx++;
+
+                if (dx != 0f || dy != 0f)
+                {
+                    FlatVector direction = FlatMath.Normalize(new FlatVector(dx, dy));
+                    FlatVector velocity = direction * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    this.bodyList[0].Move(velocity);
+                }
             }
+
+            foreach (var body in this.bodyList)
+            {
+                body.Rotate(MathF.PI / 2f * (float)gameTime.ElapsedGameTime.TotalSeconds);
+            }
+
+            //for (int i = 0; i < bodyList.Count - 1; i++)
+            //{
+            //    for (int j = i + 1; j < bodyList.Count; j++)
+            //    {
+            //        if (Collisions.IntersectCircles(
+            //            bodyList[i].Position, bodyList[i].Radius,
+            //            bodyList[j].Position, bodyList[j].Radius,
+            //            out FlatVector normal, out float depth))
+            //        {
+            //            bodyList[i].Move(-normal * depth / 2);
+            //            bodyList[j].Move(normal * depth / 2);
+            //        }  
+            //    }
+            //}
 
             base.Update(gameTime);
         }
@@ -123,11 +167,14 @@ namespace TestingFlatPhysics
                 FlatBody body = bodyList[i];
                 if (body.ShapeType == ShapeType.Circle)
                 {
-                    shapes.DrawCircle(FlatConverter.ToVector2(body.Position), body.Radius, 32, Color.White);
+                    shapes.DrawCircleFill(FlatConverter.ToVector2(body.Position), body.Radius, 64, colors[i]);
+                    shapes.DrawCircle(FlatConverter.ToVector2(body.Position), body.Radius, 64, Color.White);
                 }
                 else if (body.ShapeType == ShapeType.Box)
                 {
-                    shapes.DrawBox(FlatConverter.ToVector2(body.Position), body.Width, body.Height, Color.Red);
+                    FlatConverter.ToVector2Array(body.GetTransformVertices(), ref this.vertexBuffer);
+                    shapes.DrawPolygonFill(this.vertexBuffer, body.Triangles, this.colors[i]);
+                    shapes.DrawPolygon(this.vertexBuffer, Color.White);
                 }
             }
             // SHAPES ---

@@ -30,7 +30,7 @@ namespace FlatPhysics
             return MathF.Sqrt(dx * dx + dy * dy);
         }
 
-        public static FlatVector Mormalize(FlatVector v)
+        public static FlatVector Normalize(FlatVector v)
         {
             float length = Length(v);
             return new FlatVector(v.X / length, v.Y / length);

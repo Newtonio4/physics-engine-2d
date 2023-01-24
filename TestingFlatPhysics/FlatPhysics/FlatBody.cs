@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 namespace FlatPhysics
@@ -30,6 +31,12 @@ namespace FlatPhysics
         public readonly float Width;
         public readonly float Height;
 
+        private readonly FlatVector[] vertices = new FlatVector[4];
+        public readonly int[] Triangles = new int[6];
+        private FlatVector[] transformedVertices = new FlatVector[4];
+
+        private bool transformUpdateRequired;
+
         public readonly ShapeType ShapeType;
 
         public FlatVector Position
@@ -49,6 +56,75 @@ namespace FlatPhysics
             this.Width = width;
             this.Height = height;
             this.ShapeType = shapeType;
+
+            if (this.ShapeType is ShapeType.Box)
+            {
+                this.vertices = CreateBoxVertices(this.Width, this.Height);
+                this.Triangles = CreateBoxTriangles();
+                this.transformedVertices = new FlatVector[this.vertices.Length];
+            }
+
+            this.transformUpdateRequired = true;
+        }
+
+        private FlatVector[] CreateBoxVertices(float width, float height)
+        {
+            float left = -width / 2f;
+            float right = left + width;
+            float bottom = -height / 2f;
+            float top = bottom + height;
+
+            return new FlatVector[]
+            {
+                new FlatVector(left, top),
+                new FlatVector(right, top),
+                new FlatVector(right, bottom),
+                new FlatVector(left, bottom)
+            };
+        }
+
+        private static int[] CreateBoxTriangles()
+        {
+            int[] tri = new int[6];
+            tri[0] = 0;
+            tri[1] = 1;
+            tri[2] = 2;
+            tri[3] = 0;
+            tri[4] = 2;
+            tri[5] = 3;
+
+            return tri;
+        }
+
+        public FlatVector[]? GetTransformVertices()
+        {
+            if (this.transformUpdateRequired)
+            {
+                FlatTransform transform = new FlatTransform(this.position, this.rotation);
+
+                for (int i = 0; i < this.vertices.Length; i++)
+                    this.transformedVertices[i] = FlatVector.Transform(this.vertices[i], transform);
+            }
+
+            return this.transformedVertices;
+        }
+
+        public void Move(FlatVector amount)
+        {
+            this.position += amount;
+            this.transformUpdateRequired = true;
+        }
+
+        public void MoveTo(FlatVector position)
+        {
+            this.position = position;
+            this.transformUpdateRequired = true;
+        }
+
+        public void Rotate(float angle)
+        {
+            this.rotation += angle;
+            this.transformUpdateRequired = true;
         }
 
         public static bool CreateCircleBody(float radius, FlatVector position, float density, bool isStatic, float restitution, out FlatBody body, out string errorMessage)

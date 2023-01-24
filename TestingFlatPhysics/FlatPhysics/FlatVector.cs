@@ -44,7 +44,22 @@ namespace FlatPhysics
             return new FlatVector(v.X / s, v.Y / s);
         }
 
-        public bool Equal(FlatVector other)
+        public static FlatVector Transform(FlatVector v, FlatTransform transform)
+        {
+            /*
+            float rx = transform.Cos * v.X - transform.Sin * v.Y;
+            float ry = transform.Sin * v.X + transform.Cos * v.Y;
+
+            float tx = rx + transform.PositionX;
+            float ty = ry + transform.PositionY;
+            */
+
+            return new FlatVector(
+                transform.Cos * v.X - transform.Sin * v.Y + transform.PositionX,
+                transform.Sin * v.X + transform.Cos * v.Y + transform.PositionY);
+        }
+
+        public bool Equals(FlatVector other)
         {
             return this.X == other.X && this.Y == other.Y;
         }
@@ -53,7 +68,7 @@ namespace FlatPhysics
         {
             if (obj is FlatVector other)
             {
-                return this.Equal(other);
+                return this.Equals(other);
             }
 
             return false;
