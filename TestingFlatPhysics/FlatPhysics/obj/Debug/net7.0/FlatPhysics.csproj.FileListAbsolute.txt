@@ -1,0 +1,12 @@
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\bin\Debug\net7.0\FlatPhysics.deps.json
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\bin\Debug\net7.0\FlatPhysics.dll
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\bin\Debug\net7.0\FlatPhysics.pdb
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.csproj.AssemblyReference.cache
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.GeneratedMSBuildEditorConfig.editorconfig
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.AssemblyInfoInputs.cache
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.AssemblyInfo.cs
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.csproj.CoreCompileInputs.cache
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.dll
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\refint\FlatPhysics.dll
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.pdb
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\ref\FlatPhysics.dll
