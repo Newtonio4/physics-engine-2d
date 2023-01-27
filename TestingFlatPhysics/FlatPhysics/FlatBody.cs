@@ -104,9 +104,17 @@ namespace FlatPhysics
 
                 for (int i = 0; i < this.vertices.Length; i++)
                     this.transformedVertices[i] = FlatVector.Transform(this.vertices[i], transform);
+
+                this.transformUpdateRequired = false;
             }
 
             return this.transformedVertices;
+        }
+
+        public void Step(float time)
+        {
+            this.position += this.linearVelocity * time;
+            this.rotation += this.rotationVelocity * time;
         }
 
         public void Move(FlatVector amount)

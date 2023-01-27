@@ -9,7 +9,6 @@ using FlatPhysics;
 using System.Collections.Generic;
 
 using FlatMath = FlatPhysics.FlatMath;
-using System.Reflection.Metadata.Ecma335;
 
 namespace TestingFlatPhysics
 {
@@ -21,8 +20,10 @@ namespace TestingFlatPhysics
         private Shapes shapes;
         private Camera camera;
 
-        private List<FlatBody> bodyList;
+        private FlatWorld world;
+
         private Color[] colors;
+        private Color[] outlineColors;
 
         private Vector2[] vertexBuffer = new Vector2[4];
 
@@ -37,15 +38,26 @@ namespace TestingFlatPhysics
 
             const double UpdatesPerSecond = 60d;
             this.TargetElapsedTime = TimeSpan.FromTicks((long)Math.Round((double)TimeSpan.TicksPerSecond / UpdatesPerSecond));
+        }
+
+        protected override void Initialize()
+        {
+            FlatUtil.SetRelativeBackBufferSize(this.graphics, 0.85f);
+
+            this.screen = new Screen(this, 1280, 768);
+            this.sprites = new Sprites(this);
+            this.shapes = new Shapes(this);
+            this.camera = new Camera(this.screen);
+            this.camera.Zoom = 20;
 
             int bodyCount = 10;
-            bodyList = new List<FlatBody>(bodyCount);
-            colors = new Color[bodyCount];
+            this.world = new FlatWorld();
+            this.colors = new Color[bodyCount];
+            this.outlineColors = new Color[bodyCount];
 
             for (int i = 0; i < bodyCount; i++)
             {
-                //int type = new Random().Next(2);
-                int type = 1;
+                int type = new Random().Next(2);
                 float posX = new Random().NextSingle() * 40 - 20;
                 float posY = new Random().NextSingle() * 30 - 15;
 
@@ -54,7 +66,7 @@ namespace TestingFlatPhysics
 
                 if (type == (int)ShapeType.Circle)
                 {
-                    if(!FlatBody.CreateCircleBody(1f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
+                    if (!FlatBody.CreateCircleBody(1f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
                     {
                         throw new Exception(errorMessaage);
                     }
@@ -68,20 +80,10 @@ namespace TestingFlatPhysics
                     }
                 }
 
-                this.bodyList.Add(body);
+                this.world.AddBody(body);
                 this.colors[i] = RandomHelper.RandomColor();
+                this.outlineColors[i] = Color.White;
             }
-        }
-
-        protected override void Initialize()
-        {
-            FlatUtil.SetRelativeBackBufferSize(this.graphics, 0.85f);
-
-            this.screen = new Screen(this, 1280, 768);
-            this.sprites = new Sprites(this);
-            this.shapes = new Shapes(this);
-            this.camera = new Camera(this.screen);
-            this.camera.Zoom = 20;
 
             base.Initialize();
         }
@@ -92,6 +94,8 @@ namespace TestingFlatPhysics
 
         protected override void Update(GameTime gameTime)
         {
+            // Keys
+
             FlatKeyboard keyboard = FlatKeyboard.Instance;
             FlatMouse mouse = FlatMouse.Instance;
 
@@ -124,33 +128,23 @@ namespace TestingFlatPhysics
                 if (keyboard.IsKeyDown(Keys.S)) dy--;
                 if (keyboard.IsKeyDown(Keys.D)) dx++;
 
+                if (!this.world.GetBody(0, out FlatBody body))
+                    throw new Exception("No body!");
+
                 if (dx != 0f || dy != 0f)
                 {
                     FlatVector direction = FlatMath.Normalize(new FlatVector(dx, dy));
                     FlatVector velocity = direction * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    this.bodyList[0].Move(velocity);
+                    body.Move(velocity);
+                }
+
+                if (keyboard.IsKeyDown(Keys.R))
+                {
+                    body.Rotate(MathF.PI / 2f * (float)gameTime.ElapsedGameTime.TotalSeconds);
                 }
             }
 
-            foreach (var body in this.bodyList)
-            {
-                body.Rotate(MathF.PI / 2f * (float)gameTime.ElapsedGameTime.TotalSeconds);
-            }
-
-            //for (int i = 0; i < bodyList.Count - 1; i++)
-            //{
-            //    for (int j = i + 1; j < bodyList.Count; j++)
-            //    {
-            //        if (Collisions.IntersectCircles(
-            //            bodyList[i].Position, bodyList[i].Radius,
-            //            bodyList[j].Position, bodyList[j].Radius,
-            //            out FlatVector normal, out float depth))
-            //        {
-            //            bodyList[i].Move(-normal * depth / 2);
-            //            bodyList[j].Move(normal * depth / 2);
-            //        }  
-            //    }
-            //}
+            world.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
 
             base.Update(gameTime);
         }
@@ -161,10 +155,13 @@ namespace TestingFlatPhysics
             this.GraphicsDevice.Clear(new Color(50, 60, 70));
 
             this.shapes.Begin(this.camera);
+
             // SHAPES ---
-            for (int i = 0; i < bodyList.Count; i++)
+            for (int i = 0; i < this.world.BodyCount; i++)
             {
-                FlatBody body = bodyList[i];
+                if(!this.world.GetBody(i, out FlatBody body))
+                    throw new Exception("No body!");
+
                 if (body.ShapeType == ShapeType.Circle)
                 {
                     shapes.DrawCircleFill(FlatConverter.ToVector2(body.Position), body.Radius, 64, colors[i]);
@@ -174,10 +171,11 @@ namespace TestingFlatPhysics
                 {
                     FlatConverter.ToVector2Array(body.GetTransformVertices(), ref this.vertexBuffer);
                     shapes.DrawPolygonFill(this.vertexBuffer, body.Triangles, this.colors[i]);
-                    shapes.DrawPolygon(this.vertexBuffer, Color.White);
+                    shapes.DrawPolygon(this.vertexBuffer, this.outlineColors[i]);
                 }
             }
             // SHAPES ---
+
             this.shapes.End();
 
             this.screen.Unset();
