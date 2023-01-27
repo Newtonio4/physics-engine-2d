@@ -29,12 +29,18 @@ namespace FlatPhysics
             return new FlatVector(a.X - b.X, a.Y - b.Y);
         }
 
+
         public static FlatVector operator -(FlatVector v)
         {
             return new FlatVector(-v.X, -v.Y);
         }
 
         public static FlatVector operator *(FlatVector v, float s)
+        {
+            return new FlatVector(v.X * s, v.Y * s);
+        }
+
+        public static FlatVector operator *(float s, FlatVector v)
         {
             return new FlatVector(v.X * s, v.Y * s);
         }

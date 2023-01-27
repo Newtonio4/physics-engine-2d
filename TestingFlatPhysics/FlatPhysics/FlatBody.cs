@@ -20,6 +20,8 @@ namespace FlatPhysics
         private float rotation;
         private float rotationVelocity;
 
+        private FlatVector force;
+
         public readonly float Density;
         public readonly float Mass;
         public readonly float Restitution;
@@ -31,30 +33,45 @@ namespace FlatPhysics
         public readonly float Width;
         public readonly float Height;
 
+        public readonly ShapeType ShapeType;
+
         private readonly FlatVector[] vertices = new FlatVector[4];
         public readonly int[] Triangles = new int[6];
         private FlatVector[] transformedVertices = new FlatVector[4];
 
         private bool transformUpdateRequired;
 
-        public readonly ShapeType ShapeType;
-
         public FlatVector Position
         {
             get { return position; }
         }
 
+        public FlatVector LinearVelocity
+        {
+            get { return linearVelocity; }
+            set { linearVelocity = value; }
+        }
+
         private FlatBody(FlatVector position, float density, float mass, float restitution, float area, bool isStatic, float radius, float width, float height, ShapeType shapeType)
         {
             this.position = position;
+            this.linearVelocity = FlatVector.Zero;
+            this.rotation = 0;
+            this.rotationVelocity = 0;
+
+            this.force = FlatVector.Zero;
+
             this.Density = density;
             this.Mass = mass;
             this.Restitution = restitution;
             this.Area = area;
+
             this.IsStatic = isStatic;
+
             this.Radius = radius;
             this.Width = width;
             this.Height = height;
+
             this.ShapeType = shapeType;
 
             if (this.ShapeType is ShapeType.Box)
@@ -113,8 +130,12 @@ namespace FlatPhysics
 
         public void Step(float time)
         {
+            this.linearVelocity += this.force / this.Mass * time; //this.force / this.Mass = acceleration
             this.position += this.linearVelocity * time;
             this.rotation += this.rotationVelocity * time;
+
+            this.force = FlatVector.Zero;
+            this.transformUpdateRequired = true;
         }
 
         public void Move(FlatVector amount)
@@ -133,6 +154,11 @@ namespace FlatPhysics
         {
             this.rotation += angle;
             this.transformUpdateRequired = true;
+        }
+
+        public void AddForce(FlatVector amount)
+        {
+            this.force = amount;
         }
 
         public static bool CreateCircleBody(float radius, FlatVector position, float density, bool isStatic, float restitution, out FlatBody body, out string errorMessage)

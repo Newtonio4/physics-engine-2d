@@ -26,6 +26,7 @@ namespace FlatPhysics
 
                 FlatVector edge = vb - va;
                 axis = new FlatVector(-edge.Y, edge.X);
+                axis = FlatMath.Normalize(axis);
 
                 ProjectVertices(vertices, axis, out minA, out maxA);
                 ProjectCircle(circleCenter, circleRadius, axis, out minB, out maxB);
@@ -46,6 +47,7 @@ namespace FlatPhysics
 
             FlatVector cp = vertices[FindClosestPointOnPolygon(circleCenter, vertices)];
             axis = cp - circleCenter;
+            axis = FlatMath.Normalize(axis);
 
             ProjectVertices(vertices, axis, out minA, out maxA);
             ProjectCircle(circleCenter, circleRadius, axis, out minB, out maxB);
@@ -62,9 +64,6 @@ namespace FlatPhysics
                 depth = axisDepth;
                 normal = axis;
             }
-
-            depth /= FlatMath.Length(normal);
-            normal = FlatMath.Normalize(normal);
 
             FlatVector polygonCenter = FindArithmeticMean(vertices);
 
@@ -91,6 +90,7 @@ namespace FlatPhysics
 
                 FlatVector edge = vb - va;
                 axis = new FlatVector(-edge.Y, edge.X);
+                axis = FlatMath.Normalize(axis);
 
                 ProjectVertices(verticesA, axis, out minA, out maxA);
                 ProjectVertices(verticesB, axis, out minB, out maxB);
@@ -116,6 +116,7 @@ namespace FlatPhysics
 
                 FlatVector edge = vb - va;
                 axis = new FlatVector(-edge.Y, edge.X);
+                axis = FlatMath.Normalize(axis);
 
                 ProjectVertices(verticesA, axis, out minA, out maxA);
                 ProjectVertices(verticesB, axis, out minB, out maxB);
@@ -133,9 +134,6 @@ namespace FlatPhysics
                     normal = axis;
                 }
             }
-
-            depth /= FlatMath.Length(normal);
-            normal = FlatMath.Normalize(normal);
 
             FlatVector centerA = FindArithmeticMean(verticesA);
             FlatVector centerB = FindArithmeticMean(verticesB);
@@ -213,19 +211,25 @@ namespace FlatPhysics
             }
         }
 
-        public static bool IntersectCircles(FlatVector centerA, float radiusA, FlatVector centerB, float radiusB, out FlatVector normal, out float depth)
+        public static bool IntersectCircles(
+            FlatVector centerA, float radiusA,
+            FlatVector centerB, float radiusB,
+            out FlatVector normal, out float depth)
         {
             normal = FlatVector.Zero;
             depth = 0f;
 
-            float dist = FlatMath.Distance(centerA, centerB);
+            float distance = FlatMath.Distance(centerA, centerB);
+            float radii = radiusA + radiusB;
 
-            if (dist >= radiusA + radiusB)
+            if (distance >= radii)
+            {
                 return false;
+            }
 
+            normal = FlatMath.Normalize(centerB - centerA);
+            depth = radii - distance;
 
-            normal = centerB - centerA;
-            depth = radiusA + radiusB - dist;
             return true;
         }
     }

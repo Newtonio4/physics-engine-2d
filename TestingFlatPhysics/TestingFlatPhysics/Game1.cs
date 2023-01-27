@@ -50,7 +50,7 @@ namespace TestingFlatPhysics
             this.camera = new Camera(this.screen);
             this.camera.Zoom = 20;
 
-            int bodyCount = 10;
+            int bodyCount = 30;
             this.world = new FlatWorld();
             this.colors = new Color[bodyCount];
             this.outlineColors = new Color[bodyCount];
@@ -121,7 +121,7 @@ namespace TestingFlatPhysics
 
                 float dx = 0f;
                 float dy = 0f;
-                float speed = 8f;
+                float forceMagnitude = 50f;
 
                 if (keyboard.IsKeyDown(Keys.W)) dy++;
                 if (keyboard.IsKeyDown(Keys.A)) dx--;
@@ -133,9 +133,9 @@ namespace TestingFlatPhysics
 
                 if (dx != 0f || dy != 0f)
                 {
-                    FlatVector direction = FlatMath.Normalize(new FlatVector(dx, dy));
-                    FlatVector velocity = direction * speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    body.Move(velocity);
+                    FlatVector forceDirection = FlatMath.Normalize(new FlatVector(dx, dy));
+                    FlatVector force = forceDirection * forceMagnitude;
+                    body.AddForce(force);
                 }
 
                 if (keyboard.IsKeyDown(Keys.R))
@@ -145,6 +145,8 @@ namespace TestingFlatPhysics
             }
 
             world.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+            WrapScreen();
 
             base.Update(gameTime);
         }
@@ -182,6 +184,27 @@ namespace TestingFlatPhysics
             this.screen.Present(this.sprites);
 
             base.Draw(gameTime);
+        }
+
+        private void WrapScreen()
+        {
+            this.camera.GetExtents(out Vector2 camMin, out Vector2 camMax);
+
+            float viewWidth = camMax.X - camMin.X;
+            float viewHeight = camMax.Y - camMin.Y;
+
+            for (int i = 0; i < world.BodyCount; i++)
+            {
+                if (!this.world.GetBody(i, out FlatBody body))
+                {
+                    throw new Exception("Game1 - WrapScreen");
+                }
+
+                if (body.Position.X < camMin.X) body.MoveTo(body.Position + new FlatVector(viewWidth, 0f));
+                if (body.Position.X > camMax.X) body.MoveTo(body.Position - new FlatVector(viewWidth, 0f));
+                if (body.Position.Y < camMin.Y) body.MoveTo(body.Position + new FlatVector(0f, viewHeight));
+                if (body.Position.Y > camMax.Y) body.MoveTo(body.Position - new FlatVector(0f, viewHeight));
+            }
         }
     }
 }
