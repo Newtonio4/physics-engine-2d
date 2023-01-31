@@ -39,8 +39,10 @@ namespace FlatPhysics
         private readonly FlatVector[] vertices = new FlatVector[4];
         public readonly int[] Triangles = new int[6];
         private FlatVector[] transformedVertices = new FlatVector[4];
+        private FlatAABB aabb;
 
         private bool transformUpdateRequired;
+        private bool aabbUpdateRequired;
 
         public FlatVector Position
         {
@@ -76,13 +78,9 @@ namespace FlatPhysics
             this.ShapeType = shapeType;
 
             if (!isStatic)
-            {
                 this.InvMass = 1 / this.Mass;
-            }
             else
-            {
                 this.InvMass = 0f;
-            }
 
             if (this.ShapeType is ShapeType.Box)
             {
@@ -92,6 +90,7 @@ namespace FlatPhysics
             }
 
             this.transformUpdateRequired = true;
+            this.aabbUpdateRequired = true;
         }
 
         private FlatVector[] CreateBoxVertices(float width, float height)
@@ -138,32 +137,81 @@ namespace FlatPhysics
             return this.transformedVertices;
         }
 
-        public void Step(float time)
+        public FlatAABB GetAABB()
         {
-            this.linearVelocity += this.force / this.Mass * time; //this.force / this.Mass = acceleration
+            if (aabbUpdateRequired)
+            {
+                float minX = float.MaxValue;
+                float minY = float.MaxValue;
+                float maxX = float.MinValue;
+                float maxY = float.MinValue;
+
+                if (this.ShapeType is ShapeType.Box)
+                {
+                    FlatVector[] vertices = GetTransformVertices();
+
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        FlatVector v = vertices[i];
+
+                        if (v.X < minX) minX = v.X;
+                        if (v.X > maxX) maxX = v.X;
+                        if (v.Y < minY) minY = v.Y;
+                        if (v.Y > maxY) maxY = v.Y;
+                    }
+                }
+                else if (this.ShapeType is ShapeType.Circle)
+                {
+                    minX = this.position.X - this.Radius;
+                    minY = this.position.Y - this.Radius;
+                    maxX = this.position.X + this.Radius;
+                    maxY = this.position.Y + this.Radius;
+                }
+                else
+                {
+                    throw new ArgumentException("Unknown ShapeType.");
+                }
+
+                aabb = new FlatAABB(minX, minY, maxX, maxY);
+                aabbUpdateRequired = false;
+            }
+
+            return aabb;
+        }
+
+        internal void Step(float time, FlatVector gravity)
+        {
+            if (IsStatic)
+                return;
+
+            this.linearVelocity += gravity * time;
             this.position += this.linearVelocity * time;
             this.rotation += this.rotationVelocity * time;
 
             this.force = FlatVector.Zero;
             this.transformUpdateRequired = true;
+            this.aabbUpdateRequired = true;
         }
 
         public void Move(FlatVector amount)
         {
             this.position += amount;
             this.transformUpdateRequired = true;
+            this.aabbUpdateRequired = true;
         }
 
         public void MoveTo(FlatVector position)
         {
             this.position = position;
             this.transformUpdateRequired = true;
+            this.aabbUpdateRequired = true;
         }
 
         public void Rotate(float angle)
         {
             this.rotation += angle;
             this.transformUpdateRequired = true;
+            this.aabbUpdateRequired = true;
         }
 
         public void AddForce(FlatVector amount)

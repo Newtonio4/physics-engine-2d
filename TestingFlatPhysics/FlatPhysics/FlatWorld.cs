@@ -27,7 +27,7 @@ namespace FlatPhysics
 
         public FlatWorld()
         {
-            this.gravity = new FlatVector(0f, 9.81f);
+            this.gravity = new FlatVector(0f, -9.81f);
         }
 
         public void AddBody(FlatBody flatBody)
@@ -58,7 +58,7 @@ namespace FlatPhysics
             // Movement
             for (int i = 0; i < this.bodyList.Count; i++)
             {
-                bodyList[i].Step(time);
+                bodyList[i].Step(time, gravity);
             }
 
             // Collision
@@ -125,11 +125,18 @@ namespace FlatPhysics
             {
                 if (shapeTypeB is ShapeType.Box)
                 {
-                    return Collisions.IntersectPolygons(bodyA.GetTransformVertices(), bodyB.GetTransformVertices(), out normal, out depth);
+                    return Collisions.IntersectPolygons(
+                        bodyA.Position, bodyA.GetTransformVertices(),
+                        bodyB.Position,bodyB.GetTransformVertices(),
+                        out normal, out depth);
                 }
                 else if (shapeTypeB is ShapeType.Circle)
                 {
-                    bool result = Collisions.IntersectCirclePolygon(bodyB.Position, bodyB.Radius, bodyA.GetTransformVertices(), out normal, out depth);
+                    bool result = Collisions.IntersectCirclePolygon(
+                        bodyB.Position, bodyB.Radius,
+                        bodyA.Position, bodyA.GetTransformVertices(),
+                        out normal, out depth);
+
                     normal = -normal;
                     return result;
                 }
@@ -138,11 +145,17 @@ namespace FlatPhysics
             {
                 if (shapeTypeB is ShapeType.Box)
                 {
-                    return Collisions.IntersectCirclePolygon(bodyA.Position, bodyA.Radius, bodyB.GetTransformVertices(), out normal, out depth);
+                    return Collisions.IntersectCirclePolygon(
+                        bodyA.Position, bodyA.Radius,
+                        bodyB.Position, bodyB.GetTransformVertices(),
+                        out normal, out depth);
                 }
                 else if (shapeTypeB is ShapeType.Circle)
                 {
-                    return Collisions.IntersectCircles(bodyA.Position, bodyA.Radius, bodyB.Position, bodyB.Radius, out normal, out depth);
+                    return Collisions.IntersectCircles(
+                        bodyA.Position, bodyA.Radius,
+                        bodyB.Position, bodyB.Radius,
+                        out normal, out depth);
                 }
             }
 

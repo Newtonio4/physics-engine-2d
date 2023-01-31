@@ -13,6 +13,12 @@ namespace TestingFlatPhysics
             return new Vector2(v.X, v.Y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static FlatVector ToFlatVector(Vector2 v)
+        {
+            return new FlatVector(v.X, v.Y);
+        }
+
         public static void ToVector2Array(FlatVector[] src, ref Vector2[] dst)
         {
             if (src == null || src.Length != dst.Length)
