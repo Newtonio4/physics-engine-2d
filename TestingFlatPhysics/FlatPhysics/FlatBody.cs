@@ -32,6 +32,7 @@ namespace FlatPhysics
         public readonly float Radius;
         public readonly float Width;
         public readonly float Height;
+        public readonly float InvMass;
 
         public readonly ShapeType ShapeType;
 
@@ -73,6 +74,15 @@ namespace FlatPhysics
             this.Height = height;
 
             this.ShapeType = shapeType;
+
+            if (!isStatic)
+            {
+                this.InvMass = 1 / this.Mass;
+            }
+            else
+            {
+                this.InvMass = 0f;
+            }
 
             if (this.ShapeType is ShapeType.Box)
             {

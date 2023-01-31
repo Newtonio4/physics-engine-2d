@@ -61,12 +61,14 @@ namespace TestingFlatPhysics
                 float posX = new Random().NextSingle() * 40 - 20;
                 float posY = new Random().NextSingle() * 30 - 15;
 
+                bool isStatic = new Random().Next(2) == 0 ? false : true;
+
                 FlatBody body = null;
 
 
                 if (type == (int)ShapeType.Circle)
                 {
-                    if (!FlatBody.CreateCircleBody(1f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
+                    if (!FlatBody.CreateCircleBody(1f, new FlatVector(posX, posY), 2f, isStatic, 0.5f, out body, out string errorMessaage))
                     {
                         throw new Exception(errorMessaage);
                     }
@@ -74,15 +76,24 @@ namespace TestingFlatPhysics
                 }
                 else if (type == (int)ShapeType.Box)
                 {
-                    if (!FlatBody.CreateBoxBody(2f, 2f, new FlatVector(posX, posY), 2f, false, 0.5f, out body, out string errorMessaage))
+                    if (!FlatBody.CreateBoxBody(1.77f, 1.77f, new FlatVector(posX, posY), 2f, isStatic, 0.5f, out body, out string errorMessaage))
                     {
                         throw new Exception(errorMessaage);
                     }
                 }
 
                 this.world.AddBody(body);
-                this.colors[i] = RandomHelper.RandomColor();
-                this.outlineColors[i] = Color.White;
+
+                if (!isStatic)
+                {
+                    this.colors[i] = RandomHelper.RandomColor();
+                    this.outlineColors[i] = Color.White;
+                }
+                else
+                {
+                    this.colors[i] = new Color(40, 40, 40);
+                    this.outlineColors[i] = Color.Red;
+                }
             }
 
             base.Initialize();
@@ -167,7 +178,7 @@ namespace TestingFlatPhysics
                 if (body.ShapeType == ShapeType.Circle)
                 {
                     shapes.DrawCircleFill(FlatConverter.ToVector2(body.Position), body.Radius, 64, colors[i]);
-                    shapes.DrawCircle(FlatConverter.ToVector2(body.Position), body.Radius, 64, Color.White);
+                    shapes.DrawCircle(FlatConverter.ToVector2(body.Position), body.Radius, 64, this.outlineColors[i]);
                 }
                 else if (body.ShapeType == ShapeType.Box)
                 {
