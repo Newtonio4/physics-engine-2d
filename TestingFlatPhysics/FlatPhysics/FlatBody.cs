@@ -24,6 +24,7 @@ namespace FlatPhysics
 
         public readonly float Density;
         public readonly float Mass;
+        public readonly float InvMass;
         public readonly float Restitution;
         public readonly float Area;
 
@@ -32,7 +33,8 @@ namespace FlatPhysics
         public readonly float Radius;
         public readonly float Width;
         public readonly float Height;
-        public readonly float InvMass;
+        public readonly float Inertia;
+        public readonly float InvInertia;
 
         public readonly ShapeType ShapeType;
 
@@ -77,10 +79,18 @@ namespace FlatPhysics
 
             this.ShapeType = shapeType;
 
+            this.Inertia = CalculateRotationalInertia();
+
             if (!isStatic)
+            {
                 this.InvMass = 1 / this.Mass;
+                this.InvInertia = 1 / Inertia;
+            }
             else
+            {
                 this.InvMass = 0f;
+                this.InvInertia = 0f;
+            }
 
             if (this.ShapeType is ShapeType.Box)
             {
@@ -91,6 +101,22 @@ namespace FlatPhysics
 
             this.transformUpdateRequired = true;
             this.aabbUpdateRequired = true;
+        }
+
+        private float CalculateRotationalInertia()
+        {
+            if (ShapeType == ShapeType.Circle)
+            {
+                return (1f / 2f) * Mass * Radius * Radius;
+            }
+            else if (ShapeType == ShapeType.Box)
+            {
+                return (1f / 12f) * Mass * (Width * Width + Height * Height);
+            }
+            else
+            {
+                throw new ArgumentException("Wrong ShapeType");
+            }
         }
 
         private FlatVector[] CreateBoxVertices(float width, float height)

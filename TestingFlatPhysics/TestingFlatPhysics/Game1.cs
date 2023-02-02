@@ -69,10 +69,29 @@ namespace TestingFlatPhysics
             this.world = new FlatWorld();
             float padding = MathF.Abs(right - left) * 0.1f;
 
+            // Bodies
             if (!FlatBody.CreateBoxBody(right - left - padding * 2, 3f, new FlatVector(0, -10), 1f, true, 0.5f, out FlatBody groundBody, out string errorMessage))
                 throw new Exception(errorMessage);
 
             this.world.AddBody(groundBody);
+
+            this.colors.Add(Color.DarkGray);
+            this.outlineColors.Add(Color.White);
+
+            if (!FlatBody.CreateBoxBody(20f, 1.5f, new FlatVector(-8f, 6.5f), 1f, true, 0.5f, out FlatBody ledgeBody1, out errorMessage))
+                throw new Exception(errorMessage);
+
+            ledgeBody1.Rotate(-0.13f);
+            this.world.AddBody(ledgeBody1);
+
+            this.colors.Add(Color.DarkGray);
+            this.outlineColors.Add(Color.White);
+
+            if (!FlatBody.CreateBoxBody(20f, 1.5f, new FlatVector(8f, 1f), 1f, true, 0.5f, out FlatBody ledgeBody2, out errorMessage))
+                throw new Exception(errorMessage);
+
+            ledgeBody2.Rotate(0.17f);
+            this.world.AddBody(ledgeBody2);
 
             this.colors.Add(Color.DarkGray);
             this.outlineColors.Add(Color.White);

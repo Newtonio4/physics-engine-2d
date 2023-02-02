@@ -27,6 +27,18 @@ namespace FlatPhysics
             return value;
         }
 
+        public static float LengthSquared(FlatVector v)
+        {
+            return v.X * v.X + v.Y * v.Y;
+        }
+
+        public static float DistanceSquared(FlatVector a, FlatVector b)
+        {
+            float dx = a.X - b.X;
+            float dy = a.Y - b.Y;
+            return dx * dx + dy * dy;
+        }
+
         public static float Length(FlatVector v)
         {
             return MathF.Sqrt(v.X * v.X + v.Y * v.Y);
@@ -53,6 +65,16 @@ namespace FlatPhysics
         public static float Cross(FlatVector a, FlatVector b)
         {
             return a.X * b.Y - a.Y * b.X;
+        }
+
+        public static bool NearlyEqual(float a, float b)
+        {
+            return MathF.Abs(a - b) < 0.001;
+        }
+
+        public static bool NearlyEqual(FlatVector a, FlatVector b)
+        {
+            return NearlyEqual(a.X, b.X) && NearlyEqual(a.Y, b.Y);
         }
     }
 }

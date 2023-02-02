@@ -50,6 +50,16 @@ namespace FlatPhysics
             return new FlatVector(v.X / s, v.Y / s);
         }
 
+        public static bool operator ==(FlatVector v1, FlatVector v2)
+        {
+            return v1.X.Equals(v2.X) && v1.Y.Equals(v2.Y);
+        }
+
+        public static bool operator !=(FlatVector v1, FlatVector v2)
+        {
+            return !v1.X.Equals(v2.X) || !v1.Y.Equals(v2.Y);
+        }
+
         public static FlatVector Transform(FlatVector v, FlatTransform transform)
         {
             /*
