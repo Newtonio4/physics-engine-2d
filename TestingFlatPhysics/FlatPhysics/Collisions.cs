@@ -11,6 +11,19 @@ namespace FlatPhysics
 {
     public static class Collisions
     {
+        public static bool IntersectAABBs(FlatAABB a, FlatAABB b)
+        {
+            if (a.Max.X <= b.Min.X ||
+                b.Max.X <= a.Min.X ||
+                a.Max.Y <= b.Min.Y ||
+                b.Max.Y <= a.Min.Y)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static void FindContactPoints(FlatBody bodyA, FlatBody bodyB, out FlatVector contact1, out FlatVector contact2, out int contactCount)
         {
             contact1 = FlatVector.Zero;

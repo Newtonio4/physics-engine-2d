@@ -189,7 +189,7 @@ namespace TestingFlatPhysics
             }
 
             watch.Restart();
-            world.Step((float)gameTime.ElapsedGameTime.TotalSeconds, 4);
+            world.Step((float)gameTime.ElapsedGameTime.TotalSeconds, 20);
             watch.Stop();
 
             totalWorldStepTime += watch.Elapsed.TotalMilliseconds;

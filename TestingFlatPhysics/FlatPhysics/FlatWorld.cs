@@ -75,11 +75,15 @@ namespace FlatPhysics
                 for (int i = 0; i < bodyList.Count - 1; i++)
                 {
                     FlatBody bodyA = bodyList[i];
+
                     for (int j = i + 1; j < bodyList.Count; j++)
                     {
                         FlatBody bodyB = bodyList[j];
 
                         if (bodyA.IsStatic && bodyB.IsStatic)
+                            continue;
+
+                        if (!Collisions.IntersectAABBs(bodyA.GetAABB(), bodyB.GetAABB()))
                             continue;
 
                         if (Collisions.Collide(bodyA, bodyB, out FlatVector normal, out float depth))
