@@ -18,6 +18,15 @@ namespace FlatPhysics
             return value;
         }
 
+        public static int Clamp(int value, int min, int max)
+        {
+            if (min == max) return value;
+            if (min > max) throw new ArgumentException("Min value should be less than max value.");
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+
         public static float Length(FlatVector v)
         {
             return MathF.Sqrt(v.X * v.X + v.Y * v.Y);

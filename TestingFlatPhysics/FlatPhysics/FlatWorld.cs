@@ -17,8 +17,12 @@ namespace FlatPhysics
         public static readonly float MinDensity = 0.2f;
         public static readonly float MaxDensity = 21.4f;
 
+        public static readonly int MinIterations = 1;
+        public static readonly int MaxIterations = 128;
+
         private List<FlatBody> bodyList = new List<FlatBody>();
         private FlatVector gravity;
+        private List<FlatManifold> contactList = new List<FlatManifold>();
 
         public int BodyCount
         {
@@ -53,50 +57,68 @@ namespace FlatPhysics
             return true;
         }
 
-        public void Step(float time)
+        public void Step(float time, int iterations)
         {
-            // Movement
-            for (int i = 0; i < this.bodyList.Count; i++)
-            {
-                bodyList[i].Step(time, gravity);
-            }
+            iterations = FlatMath.Clamp(iterations, MinIterations, MaxIterations);
 
-            // Collision
-            for (int i = 0; i < bodyList.Count - 1; i++)
+            for (int it = 0; it < iterations; it++)
             {
-                FlatBody bodyA = bodyList[i];
-                for (int j = i + 1; j < bodyList.Count; j++)
+                // Movement
+                for (int i = 0; i < this.bodyList.Count; i++)
                 {
-                    FlatBody bodyB = bodyList[j];
+                    bodyList[i].Step(time, gravity, iterations);
+                }
 
-                    if (bodyA.IsStatic && bodyB.IsStatic)
-                        continue;
+                contactList.Clear();
 
-                    if (Collide(bodyA, bodyB, out FlatVector normal, out float depth))
+                // Collision
+                for (int i = 0; i < bodyList.Count - 1; i++)
+                {
+                    FlatBody bodyA = bodyList[i];
+                    for (int j = i + 1; j < bodyList.Count; j++)
                     {
-                        if (bodyA.IsStatic)
-                        {
-                            bodyB.Move(normal * depth);
-                        }
-                        else if (bodyB.IsStatic)
-                        {
-                            bodyA.Move(-normal * depth);
-                        }
-                        else
-                        {
-                            bodyA.Move(-normal * depth / 2f);
-                            bodyB.Move(normal * depth / 2f);
-                        }
+                        FlatBody bodyB = bodyList[j];
 
+                        if (bodyA.IsStatic && bodyB.IsStatic)
+                            continue;
 
-                        ResolveCollision(bodyA, bodyB, normal, depth);
+                        if (Collisions.Collide(bodyA, bodyB, out FlatVector normal, out float depth))
+                        {
+                            if (bodyA.IsStatic)
+                            {
+                                bodyB.Move(normal * depth);
+                            }
+                            else if (bodyB.IsStatic)
+                            {
+                                bodyA.Move(-normal * depth);
+                            }
+                            else
+                            {
+                                bodyA.Move(-normal * depth / 2f);
+                                bodyB.Move(normal * depth / 2f);
+                            }
+
+                            Collisions.FindContactPoints(bodyA, bodyB, out FlatVector contact1, out FlatVector contact2, out int contactCount);
+                            FlatManifold contact = new FlatManifold(bodyA, bodyB, normal, depth, contact1, contact2, contactCount);
+                            contactList.Add(contact);
+                        }
                     }
+                }
+
+                for (int i = 0; i < contactList.Count; i++)
+                {
+                    FlatManifold contact = contactList[i];
+                    ResolveCollision(in contact);
                 }
             }
         }
 
-        public void ResolveCollision(FlatBody bodyA, FlatBody bodyB, FlatVector normal, float depth)
+        public void ResolveCollision(in FlatManifold contact)
         {
+            FlatBody bodyA = contact.BodyA;
+            FlatBody bodyB = contact.BodyB;
+            FlatVector normal = contact.Normal;
+            float depth = contact.Depth;
             FlatVector relativeVelocity = bodyB.LinearVelocity - bodyA.LinearVelocity;
 
             if (FlatMath.Dot(relativeVelocity, normal) > 0f)
@@ -112,96 +134,5 @@ namespace FlatPhysics
             bodyA.LinearVelocity -= bodyA.InvMass * impuls;
             bodyB.LinearVelocity += bodyB.InvMass * impuls;
         }
-
-        public bool Collide(FlatBody bodyA, FlatBody bodyB, out FlatVector normal, out float depth)
-        {
-            normal = FlatVector.Zero;
-            depth = 0f;
-
-            ShapeType shapeTypeA = bodyA.ShapeType;
-            ShapeType shapeTypeB = bodyB.ShapeType;
-
-            if (shapeTypeA is ShapeType.Box)
-            {
-                if (shapeTypeB is ShapeType.Box)
-                {
-                    return Collisions.IntersectPolygons(
-                        bodyA.Position, bodyA.GetTransformVertices(),
-                        bodyB.Position,bodyB.GetTransformVertices(),
-                        out normal, out depth);
-                }
-                else if (shapeTypeB is ShapeType.Circle)
-                {
-                    bool result = Collisions.IntersectCirclePolygon(
-                        bodyB.Position, bodyB.Radius,
-                        bodyA.Position, bodyA.GetTransformVertices(),
-                        out normal, out depth);
-
-                    normal = -normal;
-                    return result;
-                }
-            }
-            else if (shapeTypeA is ShapeType.Circle)
-            {
-                if (shapeTypeB is ShapeType.Box)
-                {
-                    return Collisions.IntersectCirclePolygon(
-                        bodyA.Position, bodyA.Radius,
-                        bodyB.Position, bodyB.GetTransformVertices(),
-                        out normal, out depth);
-                }
-                else if (shapeTypeB is ShapeType.Circle)
-                {
-                    return Collisions.IntersectCircles(
-                        bodyA.Position, bodyA.Radius,
-                        bodyB.Position, bodyB.Radius,
-                        out normal, out depth);
-                }
-            }
-
-            return false;
-        }
     }
 }
-
-/*
-                    if (bodyA.ShapeType is ShapeType.Box && bodyB.ShapeType is ShapeType.Circle)
-                        if (Collisions.IntersectCirclePolygon(bodyB.Position, bodyB.Radius, bodyA.GetTransformVertices(), out FlatVector normal, out float depth))
-                        {
-                            this.outlineColors[i] = Color.Red;
-                            this.outlineColors[j] = Color.Red;
-
-                            bodyA.Move(normal * depth / 2f);
-                            bodyB.Move(-normal * depth / 2f);
-                        }
-
-                    if (bodyB.ShapeType is ShapeType.Box && bodyA.ShapeType is ShapeType.Circle)
-                        if (Collisions.IntersectCirclePolygon(bodyA.Position, bodyA.Radius, bodyB.GetTransformVertices(), out FlatVector normal, out float depth))
-                        {
-                            this.outlineColors[i] = Color.Red;
-                            this.outlineColors[j] = Color.Red;
-
-                            bodyA.Move(-normal * depth / 2f);
-                            bodyB.Move(normal * depth / 2f);
-                        }
-
-                    
-                    if (Collisions.IntersectPolygons(bodyA.GetTransformVertices(), bodyB.GetTransformVertices(), out FlatVector normal, out float depth))
-                    {
-                        this.outlineColors[i] = Color.Red;
-                        this.outlineColors[j] = Color.Red;
-
-                        bodyA.Move(-normal * depth / 2f);
-                        bodyB.Move(normal * depth / 2f);
-                    }
-
-                    
-                    if (Collisions.IntersectCircles(
-                        bodyA.Position, bodyA.Radius,
-                        bodyB.Position, bodyB.Radius,
-                        out FlatVector normal, out float depth))
-                    {
-                        bodyA.Move(-normal * depth / 2);
-                        bodyB.Move(normal * depth / 2);
-                    }
-                    */

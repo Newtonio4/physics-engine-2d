@@ -9,6 +9,7 @@ using FlatPhysics;
 using System.Collections.Generic;
 
 using FlatMath = FlatPhysics.FlatMath;
+using System.Diagnostics;
 
 namespace TestingFlatPhysics
 {
@@ -19,6 +20,7 @@ namespace TestingFlatPhysics
         private Sprites sprites;
         private Shapes shapes;
         private Camera camera;
+        private SpriteFont fontConsolas18;
 
         private FlatWorld world;
 
@@ -26,6 +28,15 @@ namespace TestingFlatPhysics
         private List<Color> outlineColors;
 
         private Vector2[] vertexBuffer = new Vector2[4];
+
+        private Stopwatch watch;
+
+        private double totalWorldStepTime;
+        private int totalBodyCount;
+        private int totalSampleCount;
+        private Stopwatch sampleTimer;
+        private string worldStepTimeString = string.Empty;
+        private string bodyCountString = string.Empty;
 
         public Game1()
         {
@@ -66,12 +77,18 @@ namespace TestingFlatPhysics
             this.colors.Add(Color.DarkGray);
             this.outlineColors.Add(Color.White);
 
+            watch = new Stopwatch();
+            sampleTimer = new Stopwatch();
+            watch.Start();
+            sampleTimer.Start();
+
 
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
+            fontConsolas18 = Content.Load<SpriteFont>("Consolas 18");
         }
 
         protected override void Update(GameTime gameTime)
@@ -161,7 +178,23 @@ namespace TestingFlatPhysics
 #endif
             }
 
-            world.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+            if (this.sampleTimer.Elapsed.TotalSeconds > 1d)
+            {
+                bodyCountString = "BodyCount: " + Math.Round(totalBodyCount / (double)totalSampleCount, 4).ToString();
+                worldStepTimeString = "StepTime: " + Math.Round(totalWorldStepTime / (double)totalSampleCount, 4).ToString();
+                totalBodyCount = 0;
+                totalWorldStepTime = 0;
+                totalSampleCount = 0;
+                sampleTimer.Restart();
+            }
+
+            watch.Restart();
+            world.Step((float)gameTime.ElapsedGameTime.TotalSeconds, 4);
+            watch.Stop();
+
+            totalWorldStepTime += watch.Elapsed.TotalMilliseconds;
+            totalBodyCount += world.BodyCount;
+            totalSampleCount++;
 
             this.camera.GetExtents(out float left, out float right, out float bottom, out float top);
 
@@ -213,6 +246,16 @@ namespace TestingFlatPhysics
             // SHAPES ---
 
             this.shapes.End();
+
+            // TEXT ---
+
+            Vector2 stringSize = fontConsolas18.MeasureString(bodyCountString);
+            sprites.Begin();
+            sprites.DrawString(fontConsolas18, bodyCountString, new Vector2(0, 0), Color.White);
+            sprites.DrawString(fontConsolas18, worldStepTimeString, new Vector2(0, stringSize.Y), Color.White);
+            sprites.End();
+
+            // TEXT ---
 
             this.screen.Unset();
             this.screen.Present(this.sprites);
