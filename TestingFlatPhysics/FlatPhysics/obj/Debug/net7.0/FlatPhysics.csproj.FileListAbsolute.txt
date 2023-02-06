@@ -10,3 +10,6 @@ D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.d
 D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\refint\FlatPhysics.dll
 D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.pdb
 D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\ref\FlatPhysics.dll
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\bin\Debug\net7.0\Flat.dll
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\bin\Debug\net7.0\Flat.pdb
+D:\с#\FlatPhysics\TestingFlatPhysics\FlatPhysics\obj\Debug\net7.0\FlatPhysics.csproj.CopyComplete

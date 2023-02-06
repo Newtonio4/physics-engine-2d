@@ -39,11 +39,11 @@ namespace FlatPhysics
             {
                 if (shapeTypeB is ShapeType.Box)
                 {
-                    FindContactPoints(bodyA.GetTransformVertices(), bodyB.GetTransformVertices(), out contact1, out contact2, out contactCount);
+                    FindPolygonsContactPoints(bodyA.GetTransformVertices(), bodyB.GetTransformVertices(), out contact1, out contact2, out contactCount);
                 }
                 else if (shapeTypeB is ShapeType.Circle)
                 {
-                    FindContactPoint(bodyB.Position, bodyB.Radius, bodyA.Position, bodyA.GetTransformVertices(), out contact1);
+                    FindCirclePolygonContactPoint(bodyB.Position, bodyB.Radius, bodyA.Position, bodyA.GetTransformVertices(), out contact1);
                     contactCount = 1;
                 }
             }
@@ -51,24 +51,24 @@ namespace FlatPhysics
             {
                 if (shapeTypeB is ShapeType.Box)
                 {
-                    FindContactPoint(bodyA.Position, bodyA.Radius, bodyB.Position, bodyB.GetTransformVertices(), out contact1);
+                    FindCirclePolygonContactPoint(bodyA.Position, bodyA.Radius, bodyB.Position, bodyB.GetTransformVertices(), out contact1);
                     contactCount = 1;
                 }
                 else if (shapeTypeB is ShapeType.Circle)
                 {
-                    FindContactPoint(bodyA.Position, bodyA.Radius, bodyB.Position, bodyB.Radius, out contact1);
+                    FindCirclesContactPoint(bodyA.Position, bodyA.Radius, bodyB.Position, bodyB.Radius, out contact1);
                     contactCount = 1;
                 }
             }
         }
 
-        private static void FindContactPoint(FlatVector centerA, float radiusA, FlatVector centerB, float radiusB, out FlatVector contactPoint)
+        private static void FindCirclesContactPoint(FlatVector centerA, float radiusA, FlatVector centerB, float radiusB, out FlatVector contactPoint)
         {
             FlatVector ab = centerB - centerA;
             contactPoint = FlatMath.Normalize(ab) * radiusA + centerA;
         }
 
-        private static void FindContactPoint(FlatVector circleCenter, float circleRadius, FlatVector polygonCenter, FlatVector[] vertices, out FlatVector contactPoint)
+        private static void FindCirclePolygonContactPoint(FlatVector circleCenter, float circleRadius, FlatVector polygonCenter, FlatVector[] vertices, out FlatVector contactPoint)
         {
             contactPoint = FlatVector.Zero;
             float minDistanseSquared = float.MaxValue;
@@ -87,7 +87,7 @@ namespace FlatPhysics
             }
         }
 
-        private static void FindContactPoints(FlatVector[] verticesA, FlatVector[] verticesB, out FlatVector contact1, out FlatVector contact2, out int contactCount)
+        private static void FindPolygonsContactPoints(FlatVector[] verticesA, FlatVector[] verticesB, out FlatVector contact1, out FlatVector contact2, out int contactCount)
         {
             contact1 = FlatVector.Zero;
             contact2 = FlatVector.Zero;

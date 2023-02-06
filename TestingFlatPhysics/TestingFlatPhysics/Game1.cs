@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 using FlatMath = FlatPhysics.FlatMath;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace TestingFlatPhysics
 {
@@ -24,10 +25,8 @@ namespace TestingFlatPhysics
 
         private FlatWorld world;
 
-        private List<Color> colors;
-        private List<Color> outlineColors;
-
-        private Vector2[] vertexBuffer = new Vector2[4];
+        private List<FlatEntity> entityList;
+        private List<FlatEntity> entityRemovalList;
 
         private Stopwatch watch;
 
@@ -53,6 +52,8 @@ namespace TestingFlatPhysics
 
         protected override void Initialize()
         {
+            this.Window.Position = new Point(10, 40);
+
             FlatUtil.SetRelativeBackBufferSize(this.graphics, 0.85f);
 
             this.screen = new Screen(this, 1280, 768);
@@ -63,38 +64,35 @@ namespace TestingFlatPhysics
 
             this.camera.GetExtents(out float left, out float right, out float bottom, out float top);
 
-            this.colors = new List<Color>();
-            this.outlineColors = new List<Color>();
+            this.entityList = new List<FlatEntity>();
+            this.entityRemovalList = new List<FlatEntity>();
 
             this.world = new FlatWorld();
             float padding = MathF.Abs(right - left) * 0.1f;
 
             // Bodies
-            if (!FlatBody.CreateBoxBody(right - left - padding * 2, 3f, new FlatVector(0, -10), 1f, true, 0.5f, out FlatBody groundBody, out string errorMessage))
+            if (!FlatBody.CreateBoxBody(right - left - padding * 2, 3f, 1f, true, 0.5f, out FlatBody groundBody, out string errorMessage))
                 throw new Exception(errorMessage);
 
+            groundBody.MoveTo(new FlatVector(0, -10));
             this.world.AddBody(groundBody);
+            entityList.Add(new FlatEntity(groundBody, Color.DarkGray));
 
-            this.colors.Add(Color.DarkGray);
-            this.outlineColors.Add(Color.White);
-
-            if (!FlatBody.CreateBoxBody(20f, 1.5f, new FlatVector(-8f, 6.5f), 1f, true, 0.5f, out FlatBody ledgeBody1, out errorMessage))
+            if (!FlatBody.CreateBoxBody(20f, 1.5f, 1f, true, 0.5f, out FlatBody ledgeBody1, out errorMessage))
                 throw new Exception(errorMessage);
 
+            ledgeBody1.MoveTo(new FlatVector(-8f, 6.5f));
             ledgeBody1.Rotate(-0.13f);
             this.world.AddBody(ledgeBody1);
+            entityList.Add(new FlatEntity(ledgeBody1, Color.DarkGray));
 
-            this.colors.Add(Color.DarkGray);
-            this.outlineColors.Add(Color.White);
-
-            if (!FlatBody.CreateBoxBody(20f, 1.5f, new FlatVector(8f, 1f), 1f, true, 0.5f, out FlatBody ledgeBody2, out errorMessage))
+            if (!FlatBody.CreateBoxBody(20f, 1.5f, 1f, true, 0.5f, out FlatBody ledgeBody2, out errorMessage))
                 throw new Exception(errorMessage);
 
+            ledgeBody2.MoveTo(new FlatVector(8f, 1f));
             ledgeBody2.Rotate(0.17f);
             this.world.AddBody(ledgeBody2);
-
-            this.colors.Add(Color.DarkGray);
-            this.outlineColors.Add(Color.White);
+            entityList.Add(new FlatEntity(ledgeBody2, Color.DarkGray));
 
             watch = new Stopwatch();
             sampleTimer = new Stopwatch();
@@ -123,30 +121,20 @@ namespace TestingFlatPhysics
             // Add box body
             if (mouse.IsLeftMouseButtonPressed())
             {
-                float width = RandomHelper.RandomSingle(1f, 2f);
-                float height = RandomHelper.RandomSingle(1f, 2f);
+                float width = RandomHelper.RandomSingle(1.5f, 2.5f);
+                float height = RandomHelper.RandomSingle(1.5f, 2.5f);
                 FlatVector mouseWorldPosition = FlatConverter.ToFlatVector(mouse.GetMouseWorldPosition(this, this.screen, this.camera));
 
-                if (!FlatBody.CreateBoxBody(width, height, mouseWorldPosition, 2f, false, 0.5f, out FlatBody body, out string errorMessage))
-                    throw new Exception(errorMessage);
-
-                world.AddBody(body);
-                this.colors.Add(RandomHelper.RandomColor());
-                this.outlineColors.Add(Color.White);
+                entityList.Add(new FlatEntity(world, width, height, false, mouseWorldPosition));
             }
 
             // Add circle body
             if (mouse.IsRightMouseButtonPressed())
             {
-                float radius = RandomHelper.RandomSingle(0.75f, 1.5f);
+                float radius = RandomHelper.RandomSingle(1f, 1.5f);
                 FlatVector mouseWorldPosition = FlatConverter.ToFlatVector(mouse.GetMouseWorldPosition(this, this.screen, this.camera));
 
-                if (!FlatBody.CreateCircleBody(radius, mouseWorldPosition, 2f, false, 0.5f, out FlatBody body, out string errorMessage))
-                    throw new Exception(errorMessage);
-
-                world.AddBody(body);
-                this.colors.Add(RandomHelper.RandomColor());
-                this.outlineColors.Add(Color.White);
+                entityList.Add(new FlatEntity(world, radius, false, mouseWorldPosition));
             }
 
             if (keyboard.IsKeyAvailable)
@@ -170,31 +158,6 @@ namespace TestingFlatPhysics
                 {
                     this.camera.DecZoom();
                 }
-#if false
-                float dx = 0f;
-                float dy = 0f;
-                float forceMagnitude = 50f;
-
-                if (keyboard.IsKeyDown(Keys.W)) dy++;
-                if (keyboard.IsKeyDown(Keys.A)) dx--;
-                if (keyboard.IsKeyDown(Keys.S)) dy--;
-                if (keyboard.IsKeyDown(Keys.D)) dx++;
-
-                if (!this.world.GetBody(0, out FlatBody body))
-                    throw new Exception("No body!");
-
-                if (dx != 0f || dy != 0f)
-                {
-                    FlatVector forceDirection = FlatMath.Normalize(new FlatVector(dx, dy));
-                    FlatVector force = forceDirection * forceMagnitude;
-                    body.AddForce(force);
-                }
-
-                if (keyboard.IsKeyDown(Keys.R))
-                {
-                    body.Rotate(MathF.PI / 2f * (float)gameTime.ElapsedGameTime.TotalSeconds);
-                }
-#endif
             }
 
             if (this.sampleTimer.Elapsed.TotalSeconds > 1d)
@@ -217,19 +180,30 @@ namespace TestingFlatPhysics
 
             this.camera.GetExtents(out float left, out float right, out float bottom, out float top);
 
-            for (int i = 0; i < world.BodyCount; i++)
+            entityRemovalList.Clear();
+
+            for (int i = 0; i < entityList.Count; i++)
             {
-                if (!world.GetBody(i, out FlatBody body))
-                    throw new ArgumentOutOfRangeException();
+                FlatEntity entity = entityList[i];
+                FlatBody body = entity.Body;
+
+                if (body.IsStatic)
+                    continue;
 
                 FlatAABB box = body.GetAABB();
 
                 if (box.Max.Y < bottom)
                 {
+                    entityRemovalList.Add(entity);
                     world.RemoveBody(body);
-                    colors.RemoveAt(i);
-                    outlineColors.RemoveAt(i);
                 }
+            }
+
+            for (int i = 0; i < entityRemovalList.Count; i++)
+            {
+                FlatEntity entity = entityRemovalList[i];
+                world.RemoveBody(entity.Body);
+                entityList.Remove(entity);
             }
 
             //WrapScreen();
@@ -245,22 +219,9 @@ namespace TestingFlatPhysics
             this.shapes.Begin(this.camera);
 
             // SHAPES ---
-            for (int i = 0; i < this.world.BodyCount; i++)
+            for (int i = 0; i < this.entityList.Count; i++)
             {
-                if(!this.world.GetBody(i, out FlatBody body))
-                    throw new Exception("No body!");
-
-                if (body.ShapeType == ShapeType.Circle)
-                {
-                    shapes.DrawCircleFill(FlatConverter.ToVector2(body.Position), body.Radius, 64, colors[i]);
-                    shapes.DrawCircle(FlatConverter.ToVector2(body.Position), body.Radius, 64, this.outlineColors[i]);
-                }
-                else if (body.ShapeType == ShapeType.Box)
-                {
-                    FlatConverter.ToVector2Array(body.GetTransformVertices(), ref this.vertexBuffer);
-                    shapes.DrawPolygonFill(this.vertexBuffer, body.Triangles, this.colors[i]);
-                    shapes.DrawPolygon(this.vertexBuffer, this.outlineColors[i]);
-                }
+                entityList[i].Draw(shapes);
             }
             // SHAPES ---
 

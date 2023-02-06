@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestingFlatPhysics", "TestingFlatPhysics\TestingFlatPhysics.csproj", "{1FA6D1F0-9494-4DD4-8BF3-9BC2FEBEF75E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlatPhysics", "FlatPhysics\FlatPhysics.csproj", "{90D86B8F-B8B3-4FFE-8B1C-90D7368400C6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0ACCB874-BF8E-420D-8DD9-B826507BC5BC} = {0ACCB874-BF8E-420D-8DD9-B826507BC5BC}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flat", "Flat\Flat.csproj", "{0ACCB874-BF8E-420D-8DD9-B826507BC5BC}"
 EndProject

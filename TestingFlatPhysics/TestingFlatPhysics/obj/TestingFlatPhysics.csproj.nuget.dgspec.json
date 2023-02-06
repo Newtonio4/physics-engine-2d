@@ -31,7 +31,11 @@
         "frameworks": {
           "net7.0": {
             "targetAlias": "net7.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "D:\\с#\\FlatPhysics\\TestingFlatPhysics\\Flat\\Flat.csproj": {
+                "projectPath": "D:\\с#\\FlatPhysics\\TestingFlatPhysics\\Flat\\Flat.csproj"
+              }
+            }
           }
         },
         "warningProperties": {

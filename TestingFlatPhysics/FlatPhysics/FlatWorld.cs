@@ -61,7 +61,7 @@ namespace FlatPhysics
         {
             iterations = FlatMath.Clamp(iterations, MinIterations, MaxIterations);
 
-            for (int it = 0; it < iterations; it++)
+            for (int current = 0; current < iterations; current++)
             {
                 // Movement
                 for (int i = 0; i < this.bodyList.Count; i++)
@@ -88,20 +88,7 @@ namespace FlatPhysics
 
                         if (Collisions.Collide(bodyA, bodyB, out FlatVector normal, out float depth))
                         {
-                            if (bodyA.IsStatic)
-                            {
-                                bodyB.Move(normal * depth);
-                            }
-                            else if (bodyB.IsStatic)
-                            {
-                                bodyA.Move(-normal * depth);
-                            }
-                            else
-                            {
-                                bodyA.Move(-normal * depth / 2f);
-                                bodyB.Move(normal * depth / 2f);
-                            }
-
+                            SeparateBodies(bodyA, bodyB, normal * depth);
                             Collisions.FindContactPoints(bodyA, bodyB, out FlatVector contact1, out FlatVector contact2, out int contactCount);
                             FlatManifold contact = new FlatManifold(bodyA, bodyB, normal, depth, contact1, contact2, contactCount);
                             contactList.Add(contact);
@@ -114,6 +101,23 @@ namespace FlatPhysics
                     FlatManifold contact = contactList[i];
                     ResolveCollision(in contact);
                 }
+            }
+        }
+
+        private void SeparateBodies(FlatBody bodyA, FlatBody bodyB, FlatVector mtv)
+        {
+            if (bodyA.IsStatic)
+            {
+                bodyB.Move(mtv);
+            }
+            else if (bodyB.IsStatic)
+            {
+                bodyA.Move(-mtv);
+            }
+            else
+            {
+                bodyA.Move(-mtv / 2f);
+                bodyB.Move(mtv / 2f);
             }
         }
 
